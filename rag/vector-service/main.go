@@ -1,3 +1,4 @@
+// vector-service is a microservice that interacts with Qdrant to manage vector embeddings.
 package main
 
 import (
