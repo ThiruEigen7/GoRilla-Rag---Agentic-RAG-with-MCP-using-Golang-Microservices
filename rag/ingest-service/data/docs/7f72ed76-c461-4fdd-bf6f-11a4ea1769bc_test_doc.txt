@@ -1,0 +1,4 @@
+Merchant KYC Requirements:
+1. PAN Card - Mandatory for all merchants
+2. GST Certificate - Required for businesses
+3. Bank statements - Last 6 months required
