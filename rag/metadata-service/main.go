@@ -1,3 +1,4 @@
+//metadata-service is a microservice that manages document metadata using SQLite.
 package main
 
 import (
