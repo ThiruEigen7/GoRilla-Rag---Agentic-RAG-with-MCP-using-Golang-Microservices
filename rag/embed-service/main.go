@@ -1,3 +1,4 @@
+// embed-service is a microservice that provides text embedding functionalities
 package main
 
 import (
