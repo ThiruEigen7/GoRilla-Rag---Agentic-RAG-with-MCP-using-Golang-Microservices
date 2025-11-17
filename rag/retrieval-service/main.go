@@ -1,3 +1,4 @@
+// retrieval-service is a microservice that handles document retrieval for RAG applications.
 package main
 
 import (
