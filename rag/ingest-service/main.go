@@ -1,5 +1,3 @@
-// rag/ingest-service/main.go
-
 package main
 
 import (
@@ -18,9 +16,6 @@ import (
 	"github.com/ledongthuc/pdf"
 )
 
-// ============================================================================
-// DATA MODELS
-// ============================================================================
 
 type Document struct {
 	ID         string    `json:"id"`

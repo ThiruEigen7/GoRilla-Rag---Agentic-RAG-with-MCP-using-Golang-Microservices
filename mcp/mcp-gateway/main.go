@@ -1,4 +1,3 @@
-package mcpgateway
 package main
 
 import (
@@ -7,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 )
 
@@ -20,7 +20,7 @@ type Tool struct {
 
 // Tool registry
 var (
-	toolRegistry = make(map[string]Tool)
+	toolRegistry  = make(map[string]Tool)
 	registryMutex sync.RWMutex
 )
 
@@ -75,8 +75,8 @@ func registerDefaultTools() {
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, map[string]interface{}{
-		"status": "healthy",
-		"service": "mcp-gateway",
+		"status":      "healthy",
+		"service":     "mcp-gateway",
 		"tools_count": len(toolRegistry),
 	}, http.StatusOK)
 }

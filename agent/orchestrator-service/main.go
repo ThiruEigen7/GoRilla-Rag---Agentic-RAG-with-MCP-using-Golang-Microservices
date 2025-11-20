@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"google.golang.org/api/option"
 	"google.golang.org/genai"
 )
 
@@ -115,11 +114,12 @@ func main() {
 
 	var err error
 	ctx := context.Background()
-	geminiClient, err = genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	geminiClient, err = genai.NewClient(ctx, &genai.ClientConfig{
+		APIKey: apiKey,
+	})
 	if err != nil {
 		log.Fatalf("Failed to create Gemini client: %v", err)
 	}
-	defer geminiClient.Close()
 
 	log.Println("✅ Gemini client initialized")
 
@@ -361,9 +361,9 @@ func executeAgenticLoop(req AgentRequest) AgentResponse {
 // STEP 1: ANALYZE QUERY
 // ============================================================================
 
-func analyzeQuery(query string, context map[string]string) string {
+func analyzeQuery(query string, ctxMap map[string]string) string {
 	ctx := context.Background()
-	model := geminiClient.GenerativeModel("gemini-2.5-pro")
+	modelName := "gemini-2.5-pro"
 
 	prompt := fmt.Sprintf(`Analyze this user query and provide a brief analysis:
 
@@ -377,11 +377,11 @@ Provide:
 
 Answer in 2-3 sentences.`, query)
 
-	if len(context) > 0 {
-		prompt += fmt.Sprintf("\n\nAdditional context: %v", context)
+	if len(ctxMap) > 0 {
+		prompt += fmt.Sprintf("\n\nAdditional context: %v", ctxMap)
 	}
 
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	resp, err := geminiClient.Models.GenerateContent(ctx, modelName, genai.Text(prompt), nil)
 	if err != nil {
 		log.Printf("Analysis failed: %v", err)
 		return "Unable to analyze query"
@@ -401,9 +401,9 @@ Answer in 2-3 sentences.`, query)
 // STEP 2: CREATE EXECUTION PLAN
 // ============================================================================
 
-func createExecutionPlan(query string, context map[string]string) (*ExecutionPlan, error) {
+func createExecutionPlan(query string, ctxMap map[string]string) (*ExecutionPlan, error) {
 	ctx := context.Background()
-	model := geminiClient.GenerativeModel("gemini-2.5-pro")
+	modelName := "gemini-2.5-pro"
 
 	prompt := fmt.Sprintf(`You are an AI agent planning how to answer a user query.
 
@@ -428,7 +428,7 @@ Respond ONLY in JSON format:
   "reasoning": "Why this plan will work"
 }`, query)
 
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	resp, err := geminiClient.Models.GenerateContent(ctx, modelName, genai.Text(prompt), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -602,7 +602,7 @@ func executeCallTool(params map[string]interface{}) (map[string]interface{}, err
 
 func synthesizeAnswer(query string, results []map[string]interface{}) string {
 	ctx := context.Background()
-	model := geminiClient.GenerativeModel("gemini-pro")
+	modelName := "gemini-2.5-pro"
 
 	// Prepare context from results
 	contextStr := "Information gathered:\n\n"
@@ -618,7 +618,7 @@ Question: "%s"
 
 Provide a clear, concise answer. If information is insufficient, say so.`, query, contextStr)
 
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	resp, err := geminiClient.Models.GenerateContent(ctx, modelName, genai.Text(prompt), nil)
 	if err != nil {
 		log.Printf("Synthesis failed: %v", err)
 		return "Unable to synthesize answer from available information."
@@ -646,7 +646,7 @@ type Verification struct {
 
 func verifyAnswer(query string, answer string, results []map[string]interface{}) Verification {
 	ctx := context.Background()
-	model := geminiClient.GenerativeModel("gemini-pro")
+	modelName := "gemini-2.5-pro"
 
 	prompt := fmt.Sprintf(`Evaluate this answer:
 
@@ -665,7 +665,7 @@ Respond in JSON:
   "missing_info": "what's missing (if not complete)"
 }`, query, answer)
 
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	resp, err := geminiClient.Models.GenerateContent(ctx, modelName, genai.Text(prompt), nil)
 	if err != nil {
 		log.Printf("Verification failed: %v", err)
 		return Verification{IsComplete: true, Confidence: 0.5, MissingInfo: ""}
